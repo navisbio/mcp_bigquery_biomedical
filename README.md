@@ -4,6 +4,10 @@
 
 A Model Context Protocol (MCP) server implementation that provides access to Google BigQuery biomedical datasets, starting with **OpenTargets**. While other bigquery MCP servers exist, we decided to build a dedicated MCP server for specific datasets to help the MCP client find the right information faster and provide the right context for biopharma specific questions. 
 
+Note that this is work in progress and that the MCP itself is still in its very early days, so you can expect changes over the next weeks. 
+
+You will need a Google Cloud account and set up a service account with access to the BigQuery datasets. 
+
 ## Components
 
 ### Resources
@@ -59,7 +63,6 @@ We provide a prompt template defined in `prompts.py` to guide bioinformatics ana
 The server requires the following environment variables:
 
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to your Google Cloud service account key file
-- `PROJECT_ID`: Your Google Cloud project ID
 
 ## Usage with Claude Desktop
 
