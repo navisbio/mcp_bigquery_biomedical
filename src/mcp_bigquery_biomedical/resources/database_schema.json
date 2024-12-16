@@ -2,139 +2,103 @@
   "tables": {
     "associationByDatasourceDirect": {
       "schema": "{datatypeId, datasourceId, diseaseId, targetId, score, evidenceCount}",
-      "description": "Direct associations between targets and diseases from specific data sources. Useful for finding evidence-backed target-disease relationships from particular databases. Provides filterable, source-specific relationships with confidence scores."
+      "description": "Direct associations between targets and diseases from specific data sources. Provides filterable, source-specific relationships with confidence scores."
     },
-    
     "associationByDatasourceIndirect": {
       "schema": "{datatypeId, datasourceId, diseaseId, targetId, score, evidenceCount}",
-      "description": "Indirect/computed associations between targets and diseases. Used for discovering potential target-disease relationships that aren't directly reported but are inferred through pathway analysis or other computational methods."
+      "description": "Indirect associations between targets and diseases from data sources. Computed relationships through pathway analysis."
     },
-    
     "associationByDatatypeDirect": {
       "schema": "{diseaseId, targetId, datatypeId, score, evidenceCount}",
-      "description": "Direct associations grouped by evidence type (genetic, expression, etc.). Enables analysis of target-disease relationships based on specific types of supporting evidence, helping understand the nature of the associations."
+      "description": "Direct associations grouped by evidence type. Shows relationships based on specific evidence categories."
     },
-    
     "associationByDatatypeIndirect": {
       "schema": "{diseaseId, targetId, datatypeId, score, evidenceCount}",
-      "description": "Indirect associations grouped by evidence type. Provides computed relationships categorized by evidence category, useful for hypothesis generation and pathway analysis."
+      "description": "Indirect associations grouped by evidence type. Computed relationships categorized by evidence."
     },
-    
     "associationByOverallDirect": {
       "schema": "{diseaseId, targetId, score, evidenceCount}",
-      "description": "Overall direct associations combining all evidence types. Primary table for assessing the strength of target-disease relationships across all direct evidence sources."
+      "description": "Overall direct associations combining all evidence types. Primary table for target-disease relationship strength."
     },
-
     "associationByOverallIndirect": {
       "schema": "{diseaseId, targetId, score, evidenceCount}",
-      "description": "Indirect/computed overall associations between targets and diseases. Complements direct associations by providing pathway-based and inferred relationships, useful for discovering novel connections."
+      "description": "Overall indirect associations through pathway analysis. Computed relationships for discovering novel connections."
     },
-
     "baselineExpression": {
-      "schema": "{id, tissues{list[efo_code, label, organs, anatomical_systems, rna{value, zscore, level, unit}, protein{reliability, level, cell_type}]}}",
-      "description": "Baseline gene expression data across tissues and cell types. Essential for understanding where genes are normally expressed, combining both RNA and protein level data with anatomical context."
+      "schema": "{id, tissues{list[efo_code, label, organs{list[string]}, anatomical_systems{list[string]}, rna{value, zscore, level, unit}, protein{reliability, level, cell_type{list[name, reliability, level]}}]}}",
+      "description": "Gene expression profiles across tissues. Contains RNA and protein levels with anatomical context and reliability scores."
     },
-
-    "diseaseToPhenotype": {
-      "schema": "{disease, phenotype, evidence{list[aspect, bioCuration, diseaseFromSource, evidenceType, frequency]}}",
-      "description": "Links diseases to their phenotypes with evidence. Critical for understanding disease manifestations, similarities between diseases, and phenotype-based target selection."
-    },
-
     "diseases": {
-      "schema": "{id, code, dbXRefs{list[string]}, description, name, directLocationIds{list[string]}, obsoleteTerms{list[string]}, parents{list[string]}, synonyms, ancestors{list[string]}, descendants{list[string]}, children{list[string]}, therapeuticAreas{list[string]}, indirectLocationIds{list[string]}, ontology{isTherapeuticArea, leaf, sources}}",
-      "description": "Comprehensive disease information including ontology relationships. Central reference for disease classification, hierarchies, and therapeutic areas. Essential for disease-centric analyses and target prioritization."
+      "schema": "{id, code, dbXRefs{list[string]}, description, name, directLocationIds{list[string]}, obsoleteTerms{list[string]}, parents{list[string]}, synonyms{hasBroadSynonym{list[string]}, hasExactSynonym{list[string]}, hasNarrowSynonym{list[string]}, hasRelatedSynonym{list[string]}}, ancestors{list[string]}, descendants{list[string]}, children{list[string]}, therapeuticAreas{list[string]}, indirectLocationIds{list[string]}, ontology{isTherapeuticArea, leaf, sources{url, name}}}",
+      "description": "Disease classification and relationships. Contains ontology hierarchy, synonyms, and therapeutic area assignments."
     },
-
-    "expressionSpecificity": {
-      "schema": "{ensemblGeneId, expression{list[bodyPartId, bodyPartLevel, bodyPartName, tpm]}, expressionSpecificity{gini, hpaDistribution, hpaSpecificity}}",
-      "description": "Tissue-specific expression patterns. Provides metrics for gene expression specificity across tissues, helping identify tissue-restricted targets and potential off-target effects."
+    "diseaseToPhenotype": {
+      "schema": "{disease, phenotype, evidence{list[aspect, bioCuration, diseaseFromSourceId, diseaseFromSource, diseaseName, evidenceType, frequency, modifiers{list[string]}, onset{list[string]}, qualifier, qualifierNot, references{list[string]}, sex, resource]}}",
+      "description": "Links diseases to phenotypes with detailed evidence and qualifiers."
     },
     "drugWarnings": {
-      "schema": "{chemblIds, toxicityClass, country, description, id, warningType, year, efo_term, efo_id}",
-      "description": "Safety warnings and adverse events for drugs. Critical for drug safety assessment and risk evaluation. Contains regulatory warnings, black box warnings, and other safety notices with their temporal and geographical context."
+      "schema": "{chemblIds{list[string]}, toxicityClass, country, description, id, references{list[ref_id, ref_type, ref_url]}, warningType, year, efo_term, efo_id, efo_id_for_warning_class}",
+      "description": "Drug safety warnings and adverse events with regulatory context."
     },
-
-    "evidence": {
-      "schema": "{datasourceId, targetId, diseaseId, datatypeId, score, resourceScore, literature, pathways, clinicalPhase, studyId, studyOverview}",
-      "description": "Detailed evidence supporting target-disease associations. Core table for understanding the scientific basis of target-disease relationships, including clinical trials, literature, and pathway evidence."
+    "expressionSpecificity": {
+      "schema": "{ensemblGeneId, expression{list[bodyPartId, bodyPartLevel, bodyPartName, tpm]}, expressionSpecificity{adatissScores{list[adatissScore, bodyPartId, bodyPartLevel, bodyPartName]}, gini, hpaDistribution, hpaSpecificity}}",
+      "description": "Tissue-specific gene expression patterns and specificity metrics."
     },
-    
     "indication": {
-      "schema": "{id, indications{list[disease, efoName, maxPhaseForIndication, references]}, approvedIndications, indicationCount}",
-      "description": "Drug indications and their approval status. Maps drugs to diseases with clinical trial phase information. Essential for understanding therapeutic applications and drug repurposing opportunities."
+      "schema": "{id, indications{list[disease, efoName, references{list[source, ids{list[string]}]}, maxPhaseForIndication]}, approvedIndications{list[string]}, indicationCount}",
+      "description": "Drug indications with approval status and trial phase information."
     },
-
     "interaction": {
-      "schema": "{sourceDatabase, targetA, intA, intABiologicalRole, targetB, intB, intBBiologicalRole, speciesA{mnemonic, scientific_name, taxon_id}, speciesB, count, scoring}",
-      "description": "Protein-protein interactions with biological context. Documents physical and functional interactions between proteins, including species information and interaction types. Critical for understanding target biology and network effects."
+      "schema": "{sourceDatabase, targetA, intA, intABiologicalRole, targetB, intB, intBBiologicalRole, speciesA{mnemonic, scientific_name, taxon_id}, speciesB{mnemonic, scientific_name, taxon_id}, count, scoring}",
+      "description": "Protein-protein interactions with biological context and species information."
     },
-
     "interactionEvidence": {
-      "schema": "{targetA, targetB, evidenceScore, interactionScore, interactionIdentifier, pubmedId, interactionTypeShortName, interactionResources{databaseVersion, sourceDatabase}, participantDetectionMethodA, participantDetectionMethodB}",
-      "description": "Evidence supporting protein-protein interactions. Details experimental methods and confidence scores for protein interactions. Important for assessing reliability of interaction data."
+      "schema": "{targetA, targetB, evidenceScore, interactionScore, interactionIdentifier, pubmedId, interactionTypeShortName, interactionResources{databaseVersion, sourceDatabase}, participantDetectionMethodA{list[miIdentifier, shortName]}, participantDetectionMethodB{list[miIdentifier, shortName]}, hostOrganismTissue{fullName, shortName, xrefs{list[string]}}}",
+      "description": "Detailed evidence for protein interactions including detection methods and scores."
     },
-
-    "knownDrugsAggregated": {
-      "schema": "{drugId, targetId, diseaseId, phase, status, urls{list[niceName, url]}, ancestors{list[string]}, label, approvedSymbol, approvedName, targetClass{list[string]}, prefName, tradeNames{list[string]}, synonyms{list[string]}, drugType, mechanismOfAction, targetName}",
-      "description": "Comprehensive drug information linking targets and diseases. Aggregates clinical status, mechanisms, and nomenclature. Essential reference for drug discovery and development context."
+    "targetEssentiality": {
+      "schema": "{id, geneEssentiality{list[depMapEssentiality{list[screens{list[cellLineName, depmapId, diseaseCellLineId, diseaseFromSource, expression, geneEffect, mutation]}]}, tissueId, tissueName, isEssential]}}",
+      "description": "Gene essentiality data from DepMap CRISPR screens across cell lines and tissues."
     },
-
+    "targetPrioritisation": {
+      "schema": "{targetId, isInMembrane, isSecreted, hasSafetyEvent, hasPocket, hasLigand, hasSmallMoleculeBinder, geneticConstraint, paralogMaxIdentityPercentage, mouseOrthologMaxIdentityPercentage, isCancerDriverGene, hasTEP, mouseKOScore, hasHighQualityChemicalProbes, maxClinicalTrialPhase, tissueSpecificity, tissueDistribution}",
+      "description": "Target selection metrics combining druggability, safety, and validation features."
+    },
+    "significantAdverseDrugReactions": {
+      "schema": "{chembl_id, event, count, llr, critval, meddraCode}",
+      "description": "Statistical analysis of drug adverse events with significance metrics."
+    },
+    "pharmacogenomics": {
+      "schema": "{datasourceId, datasourceVersion, datatypeId, directionality, evidenceLevel, genotype, genotypeAnnotationText, genotypeId, haplotypeFromSourceId, haplotypeId, literature{list[string]}, pgxCategory, phenotypeFromSourceId, phenotypeText, studyId, targetFromSourceId, variantFunctionalConsequenceId, variantRsId, isDirectTarget, drugs{list[drugFromSource, drugId]}}",
+      "description": "Genetic variants affecting drug response, linking genes to drug efficacy and toxicity."
+    },
+    "mousePhenotypes": {
+      "schema": "{biologicalModels{list[allelicComposition, geneticBackground, id, literature{list[string]}]}, modelPhenotypeClasses{list[id, label]}, modelPhenotypeId, modelPhenotypeLabel, targetFromSourceId, targetInModel, targetInModelEnsemblId, targetInModelMgiId}",
+      "description": "Mouse model phenotypes and their genetic context for target validation."
+    },
     "mechanismOfAction": {
       "schema": "{actionType, mechanismOfAction, chemblIds{list[string]}, targetName, targetType, targets{list[string]}, references{list[source, ids{list[string]}, urls{list[string]}]}}",
-      "description": "How drugs interact with their targets. Details molecular mechanisms and types of drug-target interactions with supporting references. Critical for drug design and understanding drug effects."
-    },
-
-    "molecule": {
-      "schema": "{id, canonicalSmiles, inchiKey, drugType, blackBoxWarning, name, yearOfFirstApproval, maximumClinicalTrialPhase, parentId, hasBeenWithdrawn, isApproved, tradeNames{list[string]}, synonyms{list[string]}, crossReferences{key_value[key, value{list[string]}]}, childChemblIds{list[string]}, linkedDiseases{rows{list[string]}, count}, linkedTargets{rows{list[string]}, count}, description}",
-      "description": "Detailed drug molecule information. Includes chemical structure, regulatory status, and relationships to diseases and targets. Essential for chemical analysis and drug development tracking."
+      "description": "Drug mechanisms of action with supporting references and target details."
     },
     "go": {
       "schema": "{id, name}",
-      "description": "Gene Ontology terms reference. Core vocabulary for gene/protein functions, processes, and locations. Essential for functional annotation and enrichment analysis."
+      "description": "Gene Ontology terms for functional annotation of genes and proteins."
     },
-
     "hpo": {
       "schema": "{dbXRefs{list[string]}, description, id, name, namespace{list[string]}, obsolete_terms{list[string]}, parents{list[string]}}",
-      "description": "Human Phenotype Ontology terms and relationships. Standardized vocabulary for human phenotype descriptions. Critical for phenotype-based disease analysis and target selection."
+      "description": "Human Phenotype Ontology terms describing abnormal phenotypes."
     },
-
-    "mousePhenotypes": {
-      "schema": "{biologicalModels{list[allelicComposition, geneticBackground, id, literature{list[string]}]}, modelPhenotypeClasses{list[id, label]}, modelPhenotypeId, modelPhenotypeLabel, targetFromSourceId, targetInModel, targetInModelEnsemblId, targetInModelMgiId}",
-      "description": "Mouse model phenotype data with genetic context. Links human targets to mouse models and their phenotypes. Essential for in vivo target validation and understanding gene function."
-    },
-
-    "pharmacogenomics": {
-      "schema": "{datasourceId, datasourceVersion, datatypeId, directionality, evidenceLevel, genotype, genotypeAnnotationText, genotypeId, haplotypeFromSourceId, haplotypeId, literature{list[string]}, pgxCategory, phenotypeFromSourceId, phenotypeText, studyId, targetFromSourceId, variantFunctionalConsequenceId, variantRsId, isDirectTarget, drugs{list[drugFromSource, drugId]}}",
-      "description": "Genetic variations affecting drug response. Maps genetic variants to drug efficacy and toxicity. Critical for precision medicine and patient stratification."
-    },
-
     "reactome": {
       "schema": "{id, label, ancestors{list[string]}, descendants{list[string]}, children{list[string]}, parents{list[string]}, path{list[list[string]]}}",
-      "description": "Biological pathway hierarchies and relationships. Provides context for target function within biological processes. Essential for pathway analysis and understanding biological context."
+      "description": "Biological pathway hierarchies and relationships for pathway analysis."
     },
-
-    "significantAdverseDrugReactions": {
-      "schema": "{chembl_id, event, count, llr, critval, meddraCode}",
-      "description": "Statistical analysis of adverse drug reactions. Contains significantly enriched drug-event pairs with statistical metrics. Important for drug safety assessment and post-market surveillance."
-    },
-    "targetEssentiality": {
-      "schema": "{id, geneEssentiality{list[depMapEssentiality{list[screens{list[cellLineName, depmapId, diseaseCellLineId, diseaseFromSource, expression, geneEffect, mutation]}]}, tissueId, tissueName]}, isEssential}}",
-      "description": "Gene essentiality data across cell lines and tissues. Contains DepMap CRISPR screen data showing gene effects on cell survival. Critical for assessing target safety and cancer dependencies."
-    },
-
-    "targetPrioritisation": {
-      "schema": "{targetId, isInMembrane, isSecreted, hasSafetyEvent, hasPocket, hasLigand, hasSmallMoleculeBinder, geneticConstraint, paralogMaxIdentityPercentage, mouseOrthologMaxIdentityPercentage, isCancerDriverGene, hasTEP, mouseKOScore, hasHighQualityChemicalProbes, maxClinicalTrialPhase, tissueSpecificity, tissueDistribution}",
-      "description": "Scores and metrics for target selection and prioritization. Combines multiple features relevant to drug target assessment, including druggability, safety, and validation status. Essential for target selection decisions."
-    },
-
-    "targets": {
-      "schema": "{id, approvedSymbol, biotype, transcriptIds{list[string]}, canonicalTranscript{id, chromosome, start, end, strand}, canonicalExons{list[string]}, genomicLocation{chromosome, start, end, strand}, alternativeGenes{list[string]}, approvedName, go{list[id, source, evidence, aspect, geneProduct, ecoId]}, hallmarks{attributes{list[pmid, description, attribute_name]}, cancerHallmarks{list[pmid, description, impact, label]}}, synonyms{list[label, source]}, symbolSynonyms{list[label, source]}, nameSynonyms{list[label, source]}, functionDescriptions{list[string]}, subcellularLocations{list[location, source, termSL, labelSL]}, targetClass{list[id, label, level]}, obsoleteSymbols{list[label, source]}, obsoleteNames{list[label, source]}, constraint{list[constraintType, score, exp, obs, oe, oeLower, oeUpper, upperRank, upperBin, upperBin6]}, tep{targetFromSourceId, description, therapeuticArea, url}, proteinIds{list[id, source]}, dbXrefs{list[id, source]}, chemicalProbes{list[control, drugId, id, isHighQuality, mechanismOfAction{list[string]}, origin{list[string]}, probeMinerScore, probesDrugsScore, scoreInCells, scoreInOrganisms, targetFromSourceId, urls{list[niceName, url]}]}, homologues{list[speciesId, speciesName, homologyType, targetGeneId, isHighConfidence, targetGeneSymbol, queryPercentageIdentity, targetPercentageIdentity, priority]}, tractability{list[modality, id, value]}, safetyLiabilities{list[event, eventId, effects{list[direction, dosing]}, biosamples{list[cellFormat, cellLabel, tissueId, tissueLabel]}, datasource, literature, url, studies{list[description, name, type]}]}, pathways{list[pathwayId, pathway, topLevelTerm]}}",
-      "description": "Comprehensive target (gene/protein) information. Central reference containing genomic, functional, and drug-related data about each target. Includes annotations, pathways, homology, and safety information. Essential starting point for any target-based analysis."
-    },
-
     "ot_release": {
       "schema": "{release}",
-      "description": "Open Targets Platform release version information. Tracks database versions for reproducibility and compatibility checks."
+      "description": "Platform release version tracking for reproducibility."
+    },
+    "targets": {
+      "schema": "{id, approvedSymbol, biotype, transcriptIds{list[string]}, canonicalTranscript{id, chromosome, start, end, strand}, canonicalExons{list[string]}, genomicLocation{chromosome, start, end, strand}, alternativeGenes{list[string]}, approvedName, go{list[id, source, evidence, aspect, geneProduct, ecoId]}, hallmarks{attributes{list[pmid, description, attribute_name]}, cancerHallmarks{list[pmid, description, impact, label]}}, synonyms{list[label, source]}, symbolSynonyms{list[label, source]}, nameSynonyms{list[label, source]}, functionDescriptions{list[string]}, subcellularLocations{list[location, source, termSL, labelSL]}, targetClass{list[id, label, level]}, obsoleteSymbols{list[label, source]}, obsoleteNames{list[label, source]}, constraint{list[constraintType, score, exp, obs, oe, oeLower, oeUpper, upperRank, upperBin, upperBin6]}, tep{targetFromSourceId, description, therapeuticArea, url}, proteinIds{list[id, source]}, dbXrefs{list[id, source]}, chemicalProbes{list[control, drugId, id, isHighQuality, mechanismOfAction{list[string]}, origin{list[string]}, probeMinerScore, probesDrugsScore, scoreInCells, scoreInOrganisms, targetFromSourceId, urls{list[niceName, url]}]}, homologues{list[speciesId, speciesName, homologyType, targetGeneId, isHighConfidence, targetGeneSymbol, queryPercentageIdentity, targetPercentageIdentity, priority]}, tractability{list[modality, id, value]}, safetyLiabilities{list[event, eventId, effects{list[direction, dosing]}, biosamples{list[cellFormat, cellLabel, tissueId, tissueLabel]}, datasource, literature, url, studies{list[description, name, type]}]}, pathways{list[pathwayId, pathway, topLevelTerm]}}",
+      "description": "Central reference table for target genes/proteins with comprehensive annotations."
     }
   }
 }
