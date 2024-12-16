@@ -1,78 +1,95 @@
-# MotherDuck MCP Server
+# MCP BigQuery Biomedical Server
 
 ## Overview
-A Model Context Protocol (MCP) server implementation that provides access to MotherDuck databases. This server enables data analysis and automatically generates analysis memos that capture insights from your data.
+
+A Model Context Protocol (MCP) server implementation that provides access to Google BigQuery biomedical datasets, starting with **OpenTargets**. While other bigquery MCP servers exist, we decided to build a dedicated MCP server for specific datasets to help the MCP client find the right information faster and provide the right context for biopharma specific questions. 
 
 ## Components
 
 ### Resources
-The server exposes a dynamic resource to store analysis results:
-- `memo://analysis`: Key findings and insights from data analysis
+
+The server exposes the following resources:
+
+- `memo://insights`: **Insights on Target Assessment**  
+  *A memo for the LLM to store information on the analysis.*
+
+- `schema://database`: **OpenTargets Database Schema**  
+  *Detailed structural information about the OpenTargets database, including column names and a short table description. This helps the network to plan queries without the need of exploring the database itself.*
 
 ### Tools
+
 The server offers several core tools:
 
 #### Query Tools
+
 - `read-query`
-   - Execute SELECT queries on the MotherDuck database
-   - Input: 
-     - `query` (string): The SELECT SQL query to execute
-   - Returns: Query results as JSON array of objects
+  - Execute `SELECT` queries on the BigQuery biomedical datasets
+  - **Input:**
+    - `query` (string): The `SELECT` SQL query to execute
+  - **Returns:** Query results as JSON array of objects
 
 #### Schema Tools
+
 - `list-tables`
-   - Get a list of all tables in the MotherDuck database
-   - No input required
-   - Returns: List of table names
+  - Get a list of all tables in the BigQuery dataset
+  - **Input:** None required
+  - **Returns:** List of table names
 
 - `describe-table`
-   - View schema information for a specific table
-   - Input:
-     - `table_name` (string): Name of table to describe
-   - Returns: Column definitions with names, types, and nullability
+  - View schema information for a specific table
+  - **Input:**
+    - `table_name` (string): Name of table to describe
+  - **Returns:** Column definitions with names, types, and nullability
 
 #### Analysis Tools
+
 - `append-analysis`
-   - Add new findings to the analysis memo
-   - Input:
-     - `finding` (string): Analysis finding about patterns or trends
-   - Returns: Confirmation of finding addition
+  - Add new findings to the analysis memo
+  - **Input:**
+    - `finding` (string): Analysis finding about patterns or trends
+  - **Returns:** Confirmation of finding addition
+
+### Prompt Template
+
+We provide a prompt template defined in `prompts.py` to guide bioinformatics analyses using the OpenTargets dataset. This can be helpful in guiding the LLM in its exploration. If you have suggestions for predefined workflows, let us know!
+
 
 ## Environment Variables
+
 The server requires the following environment variables:
-- `MOTHERDUCK_TOKEN`: Your MotherDuck authentication token
-- `MOTHERDUCK_DATABASE`: Name of the MotherDuck database to connect to
+
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to your Google Cloud service account key file
+- `PROJECT_ID`: Your Google Cloud project ID
 
 ## Usage with Claude Desktop
 
-Add the following to your claude_desktop_config.json:
+Add the following to your `claude_desktop_config.json`:
 
-
+```json:claude_desktop_config.json
 "mcpServers": {
-    "MOTHERDUCK-MCP": {
+    "BIGQUERY-BIOMEDICAL-MCP": {
       "command": "python",
       "args": [
         "-m",
-        "mcp_server_motherduck"
+        "mcp_bigquery_biomedical"
       ],
       "env": {
-        "MOTHERDUCK_TOKEN": "YOUR_TOKEN",
-        "MOTHERDUCK_DATABASE": "YOUR_DATABASE"
+        "GOOGLE_APPLICATION_CREDENTIALS": "PATH_TO_YOUR_SERVICE_ACCOUNT_KEY.json",
+        "PROJECT_ID": "YOUR_GOOGLE_CLOUD_PROJECT_ID"
       }
     }
 }
 
-
 ## Roadmap & Contribution
 
-Over the coming weeks and months, we will build other MCP servers for the following datasets:
+We start with support for **OpenTargets** datasets and plan to include additional BigQuery biomedical datasets in the future. Over the coming weeks and months, we will expand support to include:
 
-- OpenFDA: Access to FDA drug, device, and food data
+- **Additional BigQuery biomedical datasets**
 - ChEMBL: Bioactive molecules and drug-like compounds
-- Open Targets: Genetic associations and drug target validation
+- TCGA: Cancer genomics data
 - And more to come!
 
-We warmly welcome contributions of all kinds! Happy to hear from you if you
+We warmly welcome contributions of all kinds! Happy to hear from you if you:
 
 - Have specific use cases you'd like to explore
 - Need customizations for your research
@@ -81,12 +98,14 @@ We warmly welcome contributions of all kinds! Happy to hear from you if you
 - Want to improve existing features
 
 Please reach out by:
+
 - Opening an issue on GitHub
 - Starting a discussion in our repository
-- Emailing us at jonas.walheim@navis-bio.com
+- Emailing us at [jonas.walheim@navis-bio.com](mailto:jonas.walheim@navis-bio.com)
 - Submitting pull requests
 
-Your feedback helps shape our development priorities and align them with the research community's needs.
+Your feedback helps shape our development priorities.
+
 
 ## License
 
