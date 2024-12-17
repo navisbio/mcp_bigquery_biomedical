@@ -82,6 +82,8 @@ Add the following to your `claude_desktop_config.json`:
       }
     }
 }
+```
+
 
 ## Roadmap & Contribution
 
