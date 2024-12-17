@@ -89,7 +89,7 @@ Add the following to your `claude_desktop_config.json`:
 
 We start with support for **OpenTargets** datasets and plan to include additional BigQuery biomedical datasets in the future. Over the coming weeks and months, we will expand support to include:
 
-- **Additional BigQuery biomedical datasets**
+**Additional BigQuery biomedical datasets**
 - ChEMBL: Bioactive molecules and drug-like compounds
 - TCGA: Cancer genomics data
 - And more to come!
