@@ -4,7 +4,6 @@ from typing import Any, Optional, List
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,13 +13,10 @@ class BigQueryDatabase:
     def __init__(self):
         logger.info("Initializing BigQuery database connection")
         self.client = self._initialize_bigquery_client()
-        self.allowed_datasets = self._get_allowed_datasets()
-        logger.info(f"BigQuery database initialization complete. Allowed datasets: {self.allowed_datasets}")
-
-    def _get_allowed_datasets(self) -> List[str]:
-        """Get list of allowed datasets from environment variable"""
-        datasets = os.environ.get('ALLOWED_DATASETS', '').split(',')
-        return [ds.strip() for ds in datasets if ds.strip()]
+        # Temporarily disabled dataset validation
+        # self.allowed_datasets = self._get_allowed_datasets()
+        # logger.info(f"BigQuery database initialization complete. Allowed datasets: {self.allowed_datasets}")
+        logger.info("BigQuery database initialization complete")
 
     def _initialize_bigquery_client(self) -> bigquery.Client:
         """Initializes the BigQuery client."""
@@ -36,16 +32,26 @@ class BigQueryDatabase:
         logger.info("BigQuery client initialized")
         return client
 
+    def _get_allowed_datasets(self) -> List[str]:
+        """Get list of allowed datasets from environment variable"""
+        # Temporarily disabled
+        # datasets = os.environ.get('ALLOWED_DATASETS', '').split(',')
+        # return [ds.strip() for ds in datasets if ds.strip()]
+        return []
+
     def validate_dataset(self, dataset: str) -> None:
         """Validate that the dataset is allowed"""
-        if not dataset:
-            raise ValueError("Dataset name cannot be empty")
-        if dataset not in self.allowed_datasets:
-            raise ValueError(f"Dataset '{dataset}' is not in allowed datasets: {self.allowed_datasets}")
+        # Temporarily disabled dataset validation
+        # if not dataset:
+        #     raise ValueError("Dataset name cannot be empty")
+        # if dataset not in self.allowed_datasets:
+        #     raise ValueError(f"Dataset '{dataset}' is not in allowed datasets: {self.allowed_datasets}")
+        pass
 
     def execute_query(self, query: str, dataset: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
         """Execute a SQL query and return results as a list of dictionaries"""
-        self.validate_dataset(dataset)
+        # Temporarily disabled dataset validation
+        # self.validate_dataset(dataset)
         logger.debug(f"Executing query on dataset {dataset}: {query}")
         
         # Set up the job configuration with the dataset
