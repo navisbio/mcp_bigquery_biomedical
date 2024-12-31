@@ -43,48 +43,12 @@ class BigQueryDatabase:
         if dataset not in self.allowed_datasets:
             raise ValueError(f"Dataset '{dataset}' is not in allowed datasets: {self.allowed_datasets}")
 
-    def validate_query_datasets(self, query: str) -> None:
-        """Validate that any datasets referenced in the query are allowed"""
-        # Look for dataset references in the form "dataset.table"
-        query_lower = query.lower()
-        # Remove backticks from the entire query for validation
-        query_lower = query_lower.replace('`', '')
-        
-        for word in query_lower.split():
-            if '.' in word:
-                parts = word.split('.')
-                # Skip if this is the bigquery-public-data prefix
-                if parts[0] == 'bigquery-public-data':
-                    if len(parts) > 1:
-                        dataset_name = parts[1]
-                        # Skip if it's INFORMATION_SCHEMA
-                        if dataset_name == 'information_schema':
-                            continue
-                        if dataset_name not in self.allowed_datasets:
-                            raise ValueError(f"Query references unauthorized dataset: {dataset_name}")
-                    continue
-                
-                # Check the first part if it's not bigquery-public-data
-                dataset_name = parts[0]
-                if dataset_name not in ['select', 'from', 'where', 'and', 'or', 'information_schema']:  # Skip SQL keywords
-                    if dataset_name in self.allowed_datasets:
-                        continue
-                    raise ValueError(f"Query references unauthorized dataset: {dataset_name}")
-
     def execute_query(self, query: str, dataset: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
         """Execute a SQL query and return results as a list of dictionaries"""
         self.validate_dataset(dataset)
-        self.validate_query_datasets(query)
-            
         logger.debug(f"Executing query on dataset {dataset}: {query}")
         
-        # Replace any direct references to dataset.table with fully qualified names
-        for allowed_dataset in self.allowed_datasets:
-            pattern = f"{allowed_dataset}."
-            replacement = f"bigquery-public-data.{allowed_dataset}."
-            query = query.replace(pattern, replacement)
-        
-        # Set default dataset for unqualified table references
+        # Set up the job configuration with the dataset
         job_config = bigquery.QueryJobConfig(
             default_dataset=f"bigquery-public-data.{dataset}"
         )
@@ -98,7 +62,6 @@ class BigQueryDatabase:
             job_config.query_parameters = query_parameters
 
         try:
-            logger.debug(f"Final query after processing: {query}")
             query_job = self.client.query(query, job_config=job_config)
             results = query_job.result()
             rows = [dict(row) for row in results]

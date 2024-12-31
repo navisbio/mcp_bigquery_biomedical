@@ -126,12 +126,7 @@ class ToolManager:
                 self.db.validate_dataset(dataset)
 
             if name == "list-tables":
-                query = """
-                    SELECT table_name
-                    FROM INFORMATION_SCHEMA.TABLES
-                    ORDER BY table_name;
-                """
-                
+                query = "SELECT table_name FROM INFORMATION_SCHEMA.TABLES"
                 rows = self.db.execute_query(query, dataset)
                 tables = [row['table_name'] for row in rows]
                 return [types.TextContent(type="text", text=str(tables))]
@@ -145,7 +140,6 @@ class ToolManager:
                     SELECT column_name, data_type, is_nullable
                     FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE table_name = @table_name
-                    ORDER BY ordinal_position;
                 """
                 
                 rows = self.db.execute_query(query, dataset, {"table_name": table_name})
@@ -164,20 +158,16 @@ class ToolManager:
                 if not query:
                     raise ValueError("Missing query argument")
 
-                # Additional validation for the query
-                self.db.validate_query_datasets(query)
                 rows = self.db.execute_query(query, dataset)
                 return [types.TextContent(type="text", text=str(rows))]
 
             elif name == "append-insight":
                 if "finding" not in arguments:
-                    logger.error("Missing finding argument for append-insight")
                     raise ValueError("Missing finding argument")
 
                 finding = arguments["finding"]
                 logger.debug(f"Adding insight: {finding[:50]}...")
                 self.memo_manager.add_insights(finding)
-                logger.info("Insight added successfully")
                 return [types.TextContent(type="text", text="Insight added")]
 
             elif name == "get-insights":
@@ -186,7 +176,6 @@ class ToolManager:
                     return [types.TextContent(type="text", text="No insights have been recorded yet.")]
                 formatted_insights = "\n\nRecorded Insights:\n" + "\n".join(f"- {insight}" for insight in insights)
                 return [types.TextContent(type="text", text=formatted_insights)]
-
 
         except Exception as e:
             logger.error(f"Error executing tool {name}: {str(e)}", exc_info=True)
