@@ -26,43 +26,61 @@ The server offers several core tools:
 
 #### Query Tools
 
+- `list-datasets`
+  - List all available BigQuery public datasets that can be queried
+  - **Input:** None required
+  - **Returns:** List of available datasets
+
 - `read-query`
-  - Execute `SELECT` queries on the BigQuery biomedical datasets
+  - Execute `SELECT` queries on the specified BigQuery public dataset
   - **Input:**
+    - `dataset` (string): Name of the BigQuery dataset to query
     - `query` (string): The `SELECT` SQL query to execute
   - **Returns:** Query results as JSON array of objects
 
 #### Schema Tools
 
 - `list-tables`
-  - Get a list of all tables in the BigQuery dataset
-  - **Input:** None required
+  - Get a list of all tables in the specified BigQuery dataset
+  - **Input:**
+    - `dataset` (string): Name of the BigQuery dataset to explore
   - **Returns:** List of table names
 
 - `describe-table`
   - View schema information for a specific table
   - **Input:**
+    - `dataset` (string): Name of the BigQuery dataset containing the table
     - `table_name` (string): Name of table to describe
   - **Returns:** Column definitions with names, types, and nullability
 
 #### Analysis Tools
 
-- `append-analysis`
+- `append-insight`
   - Add new findings to the analysis memo
   - **Input:**
     - `finding` (string): Analysis finding about patterns or trends
   - **Returns:** Confirmation of finding addition
 
-### Prompt Template
-
-We provide a prompt template defined in `prompts.py` to guide bioinformatics analyses using the OpenTargets dataset. This can be helpful in guiding the LLM in its exploration. If you have suggestions for predefined workflows, let us know!
-
+- `get-insights`
+  - Retrieve all recorded insights from the current session
+  - **Input:** None required
+  - **Returns:** List of all recorded insights
 
 ## Environment Variables
 
 The server requires the following environment variables:
 
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to your Google Cloud service account key file
+- `ALLOWED_DATASETS`: Comma-separated list of allowed BigQuery datasets, e.g.:
+  ```
+  ALLOWED_DATASETS=open_targets_platform,open_targets_genetics,human_genome_variants,gnomad
+  ```
+
+Example `.env` file:
+```env
+GOOGLE_APPLICATION_CREDENTIALS='/path/to/your/service-account-key.json'
+ALLOWED_DATASETS=open_targets_platform,open_targets_genetics,human_genome_variants,gnomad
+```
 
 ## Usage with Claude Desktop
 
@@ -78,29 +96,18 @@ Add the following to your `claude_desktop_config.json`:
       ],
       "env": {
         "GOOGLE_APPLICATION_CREDENTIALS": "PATH_TO_YOUR_SERVICE_ACCOUNT_KEY.json",
-        "PROJECT_ID": "YOUR_GOOGLE_CLOUD_PROJECT_ID"
+        "ALLOWED_DATASETS": "open_targets_platform,open_targets_genetics,human_genome_variants,gnomad" # or whatever you want to allow
       }
     }
 }
 ```
 
+## Currently Supported Datasets
 
-## Roadmap & Contribution
+The server supports access to all BigQuery public datasets. The database resource has only been created for the **OpenTargets** datasets, but Claude also works well if no database description is provided. You can easily add one for another dataset and create a pull request.
 
-We start with support for **OpenTargets** datasets and plan to include additional BigQuery biomedical datasets in the future. Over the coming weeks and months, we will expand support to include:
+## Contact
 
-**Additional BigQuery biomedical datasets**
-- ChEMBL: Bioactive molecules and drug-like compounds
-- TCGA: Cancer genomics data
-- And more to come!
-
-We warmly welcome contributions of all kinds! Happy to hear from you if you:
-
-- Have specific use cases you'd like to explore
-- Need customizations for your research
-- Want to suggest additional datasets
-- Are interested in contributing code, documentation, or ideas
-- Want to improve existing features
 
 Please reach out by:
 
@@ -108,8 +115,6 @@ Please reach out by:
 - Starting a discussion in our repository
 - Emailing us at [jonas.walheim@navis-bio.com](mailto:jonas.walheim@navis-bio.com)
 - Submitting pull requests
-
-Your feedback helps shape our development priorities.
 
 
 ## License
