@@ -13,10 +13,9 @@ class BigQueryDatabase:
     def __init__(self):
         logger.info("Initializing BigQuery database connection")
         self.client = self._initialize_bigquery_client()
-        # Temporarily disabled dataset validation
-        # self.allowed_datasets = self._get_allowed_datasets()
-        # logger.info(f"BigQuery database initialization complete. Allowed datasets: {self.allowed_datasets}")
-        logger.info("BigQuery database initialization complete")
+        # Re-enable dataset validation
+        self.allowed_datasets = self._get_allowed_datasets()
+        logger.info(f"BigQuery database initialization complete. Allowed datasets: {self.allowed_datasets}")
 
     def _initialize_bigquery_client(self) -> bigquery.Client:
         """Initializes the BigQuery client."""
@@ -34,10 +33,18 @@ class BigQueryDatabase:
 
     def _get_allowed_datasets(self) -> List[str]:
         """Get list of allowed datasets from environment variable"""
-        # Temporarily disabled
-        # datasets = os.environ.get('ALLOWED_DATASETS', '').split(',')
-        # return [ds.strip() for ds in datasets if ds.strip()]
-        return []
+        # For now, return a list of commonly used public datasets as default
+        default_datasets = [
+            'genomics_cannabis',
+            'human_genome_variants',
+            'human_variant_annotation',
+            'ml4h_imaging',
+            'ml4h_structured',
+            'open_targets_platform',
+            'pubmed_central'
+        ]
+        datasets = os.environ.get('ALLOWED_DATASETS', ','.join(default_datasets)).split(',')
+        return [ds.strip() for ds in datasets if ds.strip()]
 
     def validate_dataset(self, dataset: str) -> None:
         """Validate that the dataset is allowed"""
@@ -50,24 +57,28 @@ class BigQueryDatabase:
 
     def execute_query(self, query: str, dataset: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
         """Execute a SQL query and return results as a list of dictionaries"""
-        # Temporarily disabled dataset validation
-        # self.validate_dataset(dataset)
         logger.debug(f"Executing query on dataset {dataset}: {query}")
         
-        # Set up the job configuration with the dataset
-        job_config = bigquery.QueryJobConfig(
-            default_dataset=f"bigquery-public-data.{dataset}"
-        )
-        
-        if params:
-            logger.debug(f"Query parameters: {params}")
-            query_parameters = [
-                bigquery.ScalarQueryParameter(name, "STRING", value)
-                for name, value in params.items()
-            ]
-            job_config.query_parameters = query_parameters
-
         try:
+            # Set up the job configuration with the dataset
+            job_config = bigquery.QueryJobConfig()
+            
+            if params:
+                logger.debug(f"Query parameters: {params}")
+                query_parameters = [
+                    bigquery.ScalarQueryParameter(name, "STRING", value)
+                    for name, value in params.items()
+                ]
+                job_config.query_parameters = query_parameters
+
+            # Replace any existing dataset references with the correct project.dataset format
+            full_dataset = f"bigquery-public-data.{dataset}"
+            query = query.replace(dataset + ".", full_dataset + ".")
+            
+            # If no dataset reference in query, add the default dataset config
+            if full_dataset not in query:
+                job_config.default_dataset = f"bigquery-public-data.{dataset}"
+
             query_job = self.client.query(query, job_config=job_config)
             results = query_job.result()
             rows = [dict(row) for row in results]
