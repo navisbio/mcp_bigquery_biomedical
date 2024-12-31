@@ -11,7 +11,7 @@ from pathlib import Path
 logger = logging.getLogger('mcp_bigquery_server')
 logger.setLevel(logging.DEBUG)
 
-class AACTServer(Server):
+class BQServer(Server):
     def __init__(self):
         super().__init__("aact-manager")
         self.db = BigQueryDatabase()
@@ -87,7 +87,7 @@ class MCPLogHandler(logging.Handler):
 
 async def main():
     try:
-        server = AACTServer()
+        server = BQServer()
         
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
             await server.run(

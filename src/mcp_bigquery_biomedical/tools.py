@@ -20,27 +20,10 @@ class ToolManager:
         logger.debug("Retrieving available tools")
         tools = [
             types.Tool(
-                name="read-query",
+                name="list-datasets",
                 description=(
-                    "Execute a SELECT query on the Open Targets BigQuery public datasets. "
-                    "Use this tool to extract and analyze specific data from tables such as associations, evidence, targets, diseases, or drugs. "
-                    "For example, you can query target-disease associations or retrieve evidence supporting a particular association. "
-                    "IMPORTANT: When using this tool, your answer must be based solely on the data retrieved from the query. "
-                    "If you want to use your own knowledge instead, inform the user that you did not use the data and ask if they agree with you using your own knowledge."
-                ),
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "query": {"type": "string", "description": "SELECT SQL query to execute on Open Targets datasets"},
-                    },
-                    "required": ["query"],
-                },
-            ),
-            types.Tool(
-                name="list-tables",
-                description=(
-                    "Retrieve a list of all available tables in the Open Targets BigQuery public datasets. "
-                    "This tool helps you understand the dataset structure and explore available data such as targets, diseases, associations, evidence, and drugs before starting your analysis."
+                    "List all available BigQuery public datasets that can be queried. "
+                    "These datasets contain various biomedical data that can be analyzed."
                 ),
                 inputSchema={
                     "type": "object",
@@ -48,17 +31,47 @@ class ToolManager:
                 },
             ),
             types.Tool(
-                name="describe-table",
+                name="read-query",
                 description=(
-                    "Get detailed schema information of a specific table in the Open Targets BigQuery public datasets, including column names, data types, and descriptions. "
-                    "Use this tool to understand the data fields available in tables like 'associations', 'evidence', 'targets', 'diseases', or 'drugs' to construct accurate queries."
+                    "Execute a SELECT query on the specified BigQuery public dataset. "
+                    "Use this tool to extract and analyze specific data from tables. "
+                    "IMPORTANT: When using this tool, your answer must be based solely on the data retrieved from the query."
                 ),
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "table_name": {"type": "string", "description": "Name of the Open Targets table to describe"},
+                        "dataset": {"type": "string", "description": "Name of the BigQuery dataset to query"},
+                        "query": {"type": "string", "description": "SELECT SQL query to execute"},
                     },
-                    "required": ["table_name"],
+                    "required": ["dataset", "query"],
+                },
+            ),
+            types.Tool(
+                name="list-tables",
+                description=(
+                    "Retrieve a list of all available tables in the specified BigQuery public dataset. "
+                    "This tool helps you understand the dataset structure and explore available data."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "dataset": {"type": "string", "description": "Name of the BigQuery dataset to explore"},
+                    },
+                    "required": ["dataset"],
+                },
+            ),
+            types.Tool(
+                name="describe-table",
+                description=(
+                    "Get detailed schema information of a specific table in the specified BigQuery public dataset."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "dataset": {"type": "string", "description": "Name of the BigQuery dataset containing the table"},
+                        "table_name": {"type": "string", "description": "Name of the table to describe"},
+                    },
+                    "required": ["dataset", "table_name"],
                 },
             ),
             types.Tool(
@@ -76,6 +89,17 @@ class ToolManager:
                     "required": ["finding"],
                 },
             ),
+            types.Tool(
+                name="get-insights",
+                description=(
+                    "Retrieve all recorded insights and findings from the current analysis session. "
+                    "This tool helps you review all the key observations and patterns that have been documented."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
         ]
         logger.debug(f"Retrieved {len(tools)} available tools")
         return tools
@@ -89,38 +113,42 @@ class ToolManager:
                 logger.error(f"Unknown tool requested: {name}")
                 raise ValueError(f"Unknown tool: {name}")
 
-            if not arguments and name != "list-tables":
-                logger.error("Missing required arguments for tool execution")
-                raise ValueError("Missing required arguments")
+            if name == "list-datasets":
+                datasets = self.db.allowed_datasets
+                return [types.TextContent(type="text", text=str(datasets))]
+
+            # For all other tools that require a dataset
+            if name in ["list-tables", "describe-table", "read-query"]:
+                dataset = arguments.get("dataset")
+                if not dataset:
+                    raise ValueError(f"Missing dataset argument for {name}")
+                # Validate dataset before proceeding
+                self.db.validate_dataset(dataset)
 
             if name == "list-tables":
-                logger.debug("Listing tables from BigQuery dataset")
                 query = """
                     SELECT table_name
-                    FROM `bigquery-public-data.open_targets_platform.INFORMATION_SCHEMA.TABLES`
+                    FROM INFORMATION_SCHEMA.TABLES
                     ORDER BY table_name;
                 """
-                # Use the database's execute_query method
-                rows = self.db.execute_query(query)
+                
+                rows = self.db.execute_query(query, dataset)
                 tables = [row['table_name'] for row in rows]
-                logger.info(f"Retrieved {len(tables)} tables")
                 return [types.TextContent(type="text", text=str(tables))]
 
             elif name == "describe-table":
-                if "table_name" not in arguments:
-                    logger.error("Missing table_name argument for describe-table")
+                table_name = arguments.get("table_name")
+                if not table_name:
                     raise ValueError("Missing table_name argument")
 
-                table_name = arguments["table_name"]
-                logger.debug(f"Describing table: {table_name}")
                 query = """
                     SELECT column_name, data_type, is_nullable
-                    FROM `bigquery-public-data.open_targets_platform.INFORMATION_SCHEMA.COLUMNS`
+                    FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE table_name = @table_name
                     ORDER BY ordinal_position;
                 """
-                params = {"table_name": table_name}
-                rows = self.db.execute_query(query, params)
+                
+                rows = self.db.execute_query(query, dataset, {"table_name": table_name})
                 columns = [
                     {
                         "column_name": row['column_name'],
@@ -129,15 +157,16 @@ class ToolManager:
                     }
                     for row in rows
                 ]
-                logger.info(f"Retrieved {len(columns)} columns for table {table_name}")
                 return [types.TextContent(type="text", text=str(columns))]
 
             elif name == "read-query":
                 query = arguments.get("query", "").strip()
+                if not query:
+                    raise ValueError("Missing query argument")
 
-                logger.debug(f"Executing query: {query}")
-                rows = self.db.execute_query(query)
-                logger.info(f"Query returned {len(rows)} rows")
+                # Additional validation for the query
+                self.db.validate_query_datasets(query)
+                rows = self.db.execute_query(query, dataset)
                 return [types.TextContent(type="text", text=str(rows))]
 
             elif name == "append-insight":
@@ -150,6 +179,13 @@ class ToolManager:
                 self.memo_manager.add_insights(finding)
                 logger.info("Insight added successfully")
                 return [types.TextContent(type="text", text="Insight added")]
+
+            elif name == "get-insights":
+                insights = self.memo_manager.get_insights()
+                if not insights:
+                    return [types.TextContent(type="text", text="No insights have been recorded yet.")]
+                formatted_insights = "\n\nRecorded Insights:\n" + "\n".join(f"- {insight}" for insight in insights)
+                return [types.TextContent(type="text", text=formatted_insights)]
 
 
         except Exception as e:
