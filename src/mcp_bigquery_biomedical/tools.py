@@ -115,6 +115,8 @@ class ToolManager:
 
             if name == "list-datasets":
                 datasets = self.db.allowed_datasets
+                if not datasets:
+                    return [types.TextContent(type="text", text="No datasets are currently configured. Please check your environment configuration.")]
                 return [types.TextContent(type="text", text=str(datasets))]
 
             # For all other tools that require a dataset
@@ -154,11 +156,37 @@ class ToolManager:
                 return [types.TextContent(type="text", text=str(columns))]
 
             elif name == "read-query":
+                dataset = arguments.get("dataset")
+                if not dataset:
+                    return [types.TextContent(
+                        type="text", 
+                        text="Please provide a dataset name. You can use the 'list-datasets' tool to see available datasets."
+                    )]
+                
                 query = arguments.get("query", "").strip()
                 if not query:
                     raise ValueError("Missing query argument")
 
                 rows = self.db.execute_query(query, dataset)
+                
+                # Check if the query results need to be saved to a file
+                if "save the results to" in query.lower():
+                    import re
+                    import os
+                    import json
+                    from datetime import datetime
+                    
+                    # Extract filename from query
+                    match = re.search(r"save the results to '([^']+)'", query)
+                    if match:
+                        filename = match.group(1)
+                        # Create data directory if it doesn't exist
+                        os.makedirs("data", exist_ok=True)
+                        
+                        # Write results to file
+                        with open(filename, 'w') as f:
+                            json.dump(rows, f, indent=2)
+                
                 return [types.TextContent(type="text", text=str(rows))]
 
             elif name == "append-insight":
