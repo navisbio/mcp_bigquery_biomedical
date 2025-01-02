@@ -95,7 +95,7 @@ Add the following to your `claude_desktop_config.json`:
         "mcp_bigquery_biomedical"
       ],
       "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "PATH_TO_YOUR_SERVICE_ACCOUNT_KEY.json",
+        "BIGQUERY_CREDENTIALS": "PATH_TO_YOUR_SERVICE_ACCOUNT_KEY.json",
         "ALLOWED_DATASETS": "open_targets_platform,open_targets_genetics,human_genome_variants,gnomad" # or whatever you want to allow
       }
     }

@@ -21,7 +21,7 @@ class BigQueryDatabase:
         """Initializes the BigQuery client."""
         logger.debug("Initializing BigQuery client")
         credentials = service_account.Credentials.from_service_account_file(
-            os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'),
+            os.environ.get('BIGQUERY_CREDENTIALS'),
             scopes=["https://www.googleapis.com/auth/cloud-platform"]
         )
         client = bigquery.Client(
