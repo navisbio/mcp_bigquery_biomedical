@@ -1,5 +1,5 @@
 import logging
-from mcp.server import Server, NotificationOptions, RequestContext
+from mcp.server import Server, NotificationOptions
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
 from .database import BigQueryDatabase

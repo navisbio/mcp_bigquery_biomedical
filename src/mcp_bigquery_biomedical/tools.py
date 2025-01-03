@@ -73,33 +73,7 @@ class ToolManager:
                     },
                     "required": ["dataset", "table_name"],
                 },
-            ),
-            types.Tool(
-                name="append-insight",
-                description=(
-                    "Record key findings and insights discovered during your analysis of the Open Targets datasets. "
-                    "Use this tool whenever you uncover meaningful patterns, trends, or notable observations about targets, diseases, associations, or drugs. "
-                    "This helps build a comprehensive analytical narrative and ensures important discoveries are documented."
-                ),
-                inputSchema={
-                    "type": "object",
-                    "properties": {
-                        "finding": {"type": "string", "description": "Analysis finding about Open Targets data patterns or trends"},
-                    },
-                    "required": ["finding"],
-                },
-            ),
-            types.Tool(
-                name="get-insights",
-                description=(
-                    "Retrieve all recorded insights and findings from the current analysis session. "
-                    "This tool helps you review all the key observations and patterns that have been documented."
-                ),
-                inputSchema={
-                    "type": "object",
-                    "properties": {},
-                },
-            ),
+            )
         ]
         logger.debug(f"Retrieved {len(tools)} available tools")
         return tools

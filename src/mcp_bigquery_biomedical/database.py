@@ -33,18 +33,12 @@ class BigQueryDatabase:
 
     def _get_allowed_datasets(self) -> List[str]:
         """Get list of allowed datasets from environment variable"""
-        # For now, return a list of commonly used public datasets as default
-        default_datasets = [
-            'genomics_cannabis',
-            'human_genome_variants',
-            'human_variant_annotation',
-            'ml4h_imaging',
-            'ml4h_structured',
-            'open_targets_platform',
-            'pubmed_central'
-        ]
-        datasets = os.environ.get('ALLOWED_DATASETS', ','.join(default_datasets)).split(',')
-        return [ds.strip() for ds in datasets if ds.strip()]
+        datasets = os.environ.get('ALLOWED_DATASETS', '').split(',')
+        allowed = [ds.strip() for ds in datasets if ds.strip()]
+        if not allowed:
+            raise ValueError("No datasets configured. Please set ALLOWED_DATASETS environment variable.")
+        return allowed
+
 
     def validate_dataset(self, dataset: str) -> None:
         """Validate that the dataset is allowed"""

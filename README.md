@@ -15,7 +15,7 @@ You will need a Google Cloud account and set up a service account with access to
 The server exposes the following resources:
 
 - `memo://insights`: **Insights on Target Assessment**  
-  *A memo for the LLM to store information on the analysis.*
+  *A memo for the LLM to store information on the analysis. Of note, Claude does not seem to use this at the moment unless we explicitly define tools for it (which can make it overuse this capacity and therefore we removed explicit tools for resource access). We assume that future MCP clients will have better tool use (and are also working on our own client) but it does not have much impact for the moment.*
 
 - `schema://database`: **OpenTargets Database Schema**  
   *Detailed structural information about the OpenTargets database, including column names and a short table description. This helps the network to plan queries without the need of exploring the database itself.*
@@ -96,11 +96,34 @@ Add the following to your `claude_desktop_config.json`:
       ],
       "env": {
         "BIGQUERY_CREDENTIALS": "PATH_TO_YOUR_SERVICE_ACCOUNT_KEY.json",
-        "ALLOWED_DATASETS": "open_targets_platform,open_targets_genetics,human_genome_variants,gnomad" # or whatever you want to allow
+        "ALLOWED_DATASETS": "open_targets_platform,open_targets_genetics,human_genome_variants,gnomad" # or any other dataset name you want to work with 
       }
     }
 }
 ```
+You can check the public datasets in open targets for a comprehensive list, but some of the biomedical datasets are:
+
+- open_targets_platform
+- open_targets_genetics 
+- ebi_chembl
+- ebi_surechembl
+- fda_drug
+- deepmind_alphafold
+- human_genome_variants
+- human_variant_annotation
+- immune_epitope_db
+- cms_medicare
+- patents
+- patents_view
+- patents_cpc
+- google_patents_research
+- uspto_oce_cancer
+- patents_dsep
+- ebi_mgnify
+- human_genome_variants
+- gnomad
+
+Note, that many of these have not been updated for a year or two in the public bigquery database. We are building our own databases for AI supported translational research, so if you need more up to data information, please reach out to us at [jonas.walheim@navis-bio.com](mailto:jonas.walheim@navis-bio.com)
 
 ## Currently Supported Datasets
 
@@ -108,14 +131,7 @@ The server supports access to all BigQuery public datasets. The database resourc
 
 ## Contact
 
-
-Please reach out by:
-
-- Opening an issue on GitHub
-- Starting a discussion in our repository
-- Emailing us at [jonas.walheim@navis-bio.com](mailto:jonas.walheim@navis-bio.com)
-- Submitting pull requests
-
+Happy to hear from you if you have suggestions, questions, or feedback [jonas.walheim@navis-bio.com](mailto:jonas.walheim@navis-bio.com)
 
 ## License
 

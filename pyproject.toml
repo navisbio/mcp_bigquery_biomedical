@@ -1,7 +1,7 @@
 [project]
 name = "mcp-bigquery-biomedical"
-version = "0.0.1"
-description = "MCP server for Motherduck"
+version = "0.1"
+description = "MCP server for open (biomedical) datasets in bigquery"
 requires-python = ">=3.10"
 dependencies = [
     "mcp",
