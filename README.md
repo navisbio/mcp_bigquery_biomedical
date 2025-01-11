@@ -75,6 +75,7 @@ The server requires the following environment variables:
   ```
   ALLOWED_DATASETS=open_targets_platform,open_targets_genetics,human_genome_variants,gnomad
   ```
+- `BIGQUERY_MAX_COST_USD`: Maximum allowed cost per query in USD (default: 0.05) - this might seem exaggerated, but Claude can easily come up with queries that require a lot of data processing. I spent 25 USD in one day, and in most cases these costly queries fail anyway.
 
 ## Usage with Claude Desktop
 

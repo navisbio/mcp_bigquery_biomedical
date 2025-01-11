@@ -73,6 +73,21 @@ class BigQueryDatabase:
             if full_dataset not in query:
                 job_config.default_dataset = f"bigquery-public-data.{dataset}"
 
+            # First do a dry run to estimate costs
+            job_config.dry_run = True
+            dry_run = self.client.query(query, job_config=job_config)
+            bytes_processed = dry_run.total_bytes_processed
+            estimated_cost_usd = (bytes_processed / 1_000_000_000_000) * 5  # $5 per TB
+            max_cost_usd = float(os.environ.get('BIGQUERY_MAX_COST_USD', 0.05))
+
+            if estimated_cost_usd > max_cost_usd:
+                raise ValueError(
+                    f"Query would process {bytes_processed/1e9:.2f} GB costing approximately ${estimated_cost_usd:.3f}. "
+                    f"This exceeds the maximum allowed cost of ${max_cost_usd}. Please optimize your query to process less data."
+                )
+
+            # If cost is acceptable, execute the actual query
+            job_config.dry_run = False
             query_job = self.client.query(query, job_config=job_config)
             results = query_job.result()
             rows = [dict(row) for row in results]
