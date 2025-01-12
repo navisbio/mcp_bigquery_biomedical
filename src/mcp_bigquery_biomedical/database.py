@@ -78,7 +78,7 @@ class BigQueryDatabase:
             dry_run = self.client.query(query, job_config=job_config)
             bytes_processed = dry_run.total_bytes_processed
             estimated_cost_usd = (bytes_processed / 1_000_000_000_000) * 5  # $5 per TB
-            max_cost_usd = float(os.environ.get('BIGQUERY_MAX_COST_USD', 0.05))
+            max_cost_usd = float(os.environ.get('BIGQUERY_MAX_COST_USD', 0.5))
 
             if estimated_cost_usd > max_cost_usd:
                 raise ValueError(
